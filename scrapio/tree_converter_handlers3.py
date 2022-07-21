@@ -92,7 +92,6 @@ class DispatchHandler:
         return _l
             
 
-
 class a_HrefHandler:
     @property
     def is_specialstring(self):
@@ -136,9 +135,7 @@ class ImgHandler:
         yield converter_objs.img_Src_to_table(self)
         yield from self.struct
 
- 
-
-
+        
 class StructuredRecordHandler:
     @property
     def is_structuredrecord(self):
@@ -187,9 +184,7 @@ class PatternMatcherHandler:
 
     @provide_group
     def __iter__(self, level = True) -> typing.Iterator:
-        '''
-        raise Exception(f"'{self.__class__.__name__}' does not have an __iter__ yet")
-        '''
+        #raise Exception(f"'{self.__class__.__name__}' does not have an __iter__ yet")
         for i in self.runs:
             yield from i.__iter__(level = False)
         yield from self.struct.__iter__(level = True)
@@ -212,7 +207,6 @@ class MatchedRunHandler:
             yield converter_objs.RunRow.load_run_row(list(i.__iter__(level = False)))
 
 
-
 def _clean_to_List(d:typing.List) -> typing.List:
     return list(filter(None, [_clean_to_List(i) if isinstance(i, list) else getattr(i, 'strip_val', i) for i in d]))
     
@@ -220,89 +214,10 @@ def _clean_to_List(d:typing.List) -> typing.List:
 def outer_clean_to_List(d):
     return list(filter(None, [outer_clean_to_List(i) if isinstance(i, list) else i for i in d]))
 
-'''
-def clean_to_List(d:list) -> list:
-    _table_count = itertools.count(1)
-    def inner_clean(_d:list, _flag:bool = False, level:int = 0, root=False) -> list:
-        if _flag:
-            new_row = [i for a, b in itertools.groupby(list(filter(None, _d)), key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
-            if root:
-                return list(filter(lambda x:bool(x['content']), [{'table':next(_table_count), 'content':[[getattr(k, 'strip_val', k) for k in i]] if all(not isinstance(b, list) for b in i) else inner_clean(i, level=1)} for i in new_row]))
-            return {'table':next(_table_count), 'content':[[getattr(k, 'strip_val', k) for k in i] if all(not isinstance(b, list) for b in i) else inner_clean(i, level=2) for i in new_row]}
-        if level == 1:
-            new_row = [i for a, b in itertools.groupby(list(filter(None, _d)), key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
-            return list(filter(None, [[getattr(k, 'strip_val', k) for k in i] if all(not isinstance(k, list) for k in i) else inner_clean(i, level=2) for i in new_row]))
-        return list(filter(None, [inner_clean(i, _flag=True, root=False) if isinstance(i, list) else getattr(i, 'strip_val', i) for i in _d]))
-        
-    return inner_clean(d, _flag=True, root=True)
 
-'''
 def filter_row(row:typing.List[typing.Any]) -> list:
     new_row = [i for i in row if i]
     return [getattr(a, 'to_payload', a) for i, a in enumerate(new_row) if all(b != a for b in new_row[:i])]
-
-'''
-def clean_to_List(d:list, url:str) -> list:
-    _table_count = itertools.count(1)
-    with open('invalid_attrs.json') as f:
-        _forbidden = json.load(f)
-    def inner_clean(_d:list, _flag:bool = False, level:int = 0, root=False, parent=0, table=0) -> list:
-        if _flag:
-            new_row = [i for a, b in itertools.groupby(list(filter(None, _d)), key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
-            if root:
-                print(new_row)
-                print('-'*20)
-                return list(filter(lambda x:bool(x['_content']), [(lambda x:{'table':x, 'name':f'Table{x}', '_content':[filter_row([k.format_payload(table=x, parent=parent, forbidden=_forbidden, url=url) for k in i])] if all(not isinstance(b, list) for b in i) else inner_clean(i, level=1, parent=x), 'content':x, 'storetype':'table', 'newtable':parent})(next(_table_count)) for i in new_row]))
-            new_table = next(_table_count)
-            return {'table':new_table, 'name':f'Table{new_table}', '_content':[filter_row([k.format_payload(table=new_table, parent=parent, forbidden=_forbidden, url=url) for k in i]) if all(not isinstance(b, list) for b in i) else inner_clean(i, level=2, parent=parent, table=new_table) for i in new_row], 'content':new_table, 'storetype':'table', 'newtable':parent}
-        if level == 1:
-            new_row = [i for a, b in itertools.groupby(list(filter(None, _d)), key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
-            return list(filter(None, [filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) for k in i]) if all(not isinstance(k, list) for k in i) else inner_clean(i, level=2, parent=parent, table=table) for i in new_row]))
-        return list(filter(None, filter_row([inner_clean(i, _flag=True, root=False, parent=parent, table=table) if isinstance(i, list) else i.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) for i in _d])))
-    return inner_clean(d, _flag=True, root=True)
-'''
-'''
-
-def clean_to_List(d:list, url:str) -> list:
-    _table_count = itertools.count(1)
-    with open('invalid_attrs.json') as f:
-        _forbidden = json.load(f)   
-    def inner_clean(_d, to_table = True, parent=0, table=0):
-        if to_table:
-            new_table = next(_table_count)
-            def table_formation(row):
-                freq = collections.defaultdict(int)
-                for i in row:
-                    freq[not isinstance(i, list)] += 1
-                if freq[True] >= freq[False]:
-                    return list(filter(None, [filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, parent = new_table) for k in row])]))
-                return list(filter(None, [inner_clean(k, to_table=False, parent=new_table) if isinstance(k, list) else filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url)]) for k in row]))
-
-            return {'table':new_table, 'name':f'Table{new_table}', 'content':new_table, 'storetype':'table', 'newtable':parent, '_content':table_formation(_d)}
-        
-        return filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, table=parent, parent = parent) for k in _d])
-    new_d = [i for a, b in itertools.groupby(d, key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
-    return [inner_clean(i) for i in new_d]
-'''
-
-
-'''
-def clean_to_List(d:list, url:str) -> list:
-    _table_count = itertools.count(1)
-    with open('invalid_attrs.json') as f:
-        _forbidden = json.load(f)   
-    def inner_clean(_d, to_table = True, parent=0, table=0):
-        if to_table:
-            new_table = next(_table_count)
-            def table_formation(row):
-                if any(not isinstance(i, list) for i in row):
-                    return list(filter(None, [filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, parent = new_table) for k in row])]))
-                return list(filter(None, [inner_clean(k, to_table=False, parent=new_table) if any(not isinstance(j, list) for j in k) else [inner_clean(k, to_table=True, parent=new_table)] for k in row]))
-            return {'table':new_table, 'name':f'Table{new_table}', 'content':new_table, 'storetype':'table', 'newtable':parent, '_content':table_formation(_d)}
-        return filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, table=parent, parent = parent) for k in _d])
-    new_d = [i for a, b in itertools.groupby(d, key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
-    return [inner_clean(i) for i in new_d]
-'''
 
 def clean_to_List(d:list, url:str) -> list:
     _table_count = itertools.count(1)
@@ -337,3 +252,66 @@ def clean_to_List(d:list, url:str) -> list:
         return filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, table=parent, parent = parent) for k in _d])
     new_d = [i for a, b in itertools.groupby(d, key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
     return [inner_clean(i) for i in new_d]
+
+def clean_to_List_1(d:list, url:str) -> list:
+    raise Exception("depreciated")
+    _table_count = itertools.count(1)
+    with open('invalid_attrs.json') as f:
+        _forbidden = json.load(f)
+    def inner_clean(_d:list, _flag:bool = False, level:int = 0, root=False, parent=0, table=0) -> list:
+        if _flag:
+            new_row = [i for a, b in itertools.groupby(list(filter(None, _d)), key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
+            if root:
+                print(new_row)
+                print('-'*20)
+                return list(filter(lambda x:bool(x['_content']), [(lambda x:{'table':x, 'name':f'Table{x}', '_content':[filter_row([k.format_payload(table=x, parent=parent, forbidden=_forbidden, url=url) for k in i])] if all(not isinstance(b, list) for b in i) else inner_clean(i, level=1, parent=x), 'content':x, 'storetype':'table', 'newtable':parent})(next(_table_count)) for i in new_row]))
+            new_table = next(_table_count)
+            return {'table':new_table, 'name':f'Table{new_table}', '_content':[filter_row([k.format_payload(table=new_table, parent=parent, forbidden=_forbidden, url=url) for k in i]) if all(not isinstance(b, list) for b in i) else inner_clean(i, level=2, parent=parent, table=new_table) for i in new_row], 'content':new_table, 'storetype':'table', 'newtable':parent}
+        if level == 1:
+            new_row = [i for a, b in itertools.groupby(list(filter(None, _d)), key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
+            return list(filter(None, [filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) for k in i]) if all(not isinstance(k, list) for k in i) else inner_clean(i, level=2, parent=parent, table=table) for i in new_row]))
+        return list(filter(None, filter_row([inner_clean(i, _flag=True, root=False, parent=parent, table=table) if isinstance(i, list) else i.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) for i in _d])))
+    return inner_clean(d, _flag=True, root=True)
+
+
+def clean_to_List_2(d:list, url:str) -> list:
+    raise Exception("depreciated")
+    _table_count = itertools.count(1)
+    with open('invalid_attrs.json') as f:
+        _forbidden = json.load(f)   
+    def inner_clean(_d, to_table = True, parent=0, table=0):
+        if to_table:
+            new_table = next(_table_count)
+            def table_formation(row):
+                freq = collections.defaultdict(int)
+                for i in row:
+                    freq[not isinstance(i, list)] += 1
+                if freq[True] >= freq[False]:
+                    return list(filter(None, [filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, parent = new_table) for k in row])]))
+                return list(filter(None, [inner_clean(k, to_table=False, parent=new_table) if isinstance(k, list) else filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url)]) for k in row]))
+
+            return {'table':new_table, 'name':f'Table{new_table}', 'content':new_table, 'storetype':'table', 'newtable':parent, '_content':table_formation(_d)}
+        
+        return filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, table=parent, parent = parent) for k in _d])
+    new_d = [i for a, b in itertools.groupby(d, key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
+    return [inner_clean(i) for i in new_d]
+
+
+def clean_to_List_3(d:list, url:str) -> list:
+    raise Exception("depreciated")
+    _table_count = itertools.count(1)
+    with open('invalid_attrs.json') as f:
+        _forbidden = json.load(f)   
+    def inner_clean(_d, to_table = True, parent=0, table=0):
+        if to_table:
+            new_table = next(_table_count)
+            def table_formation(row):
+                if any(not isinstance(i, list) for i in row):
+                    return list(filter(None, [filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, parent = new_table) for k in row])]))
+                return list(filter(None, [inner_clean(k, to_table=False, parent=new_table) if any(not isinstance(j, list) for j in k) else [inner_clean(k, to_table=True, parent=new_table)] for k in row]))
+            return {'table':new_table, 'name':f'Table{new_table}', 'content':new_table, 'storetype':'table', 'newtable':parent, '_content':table_formation(_d)}
+        return filter_row([k.format_payload(table=table, parent=parent, forbidden=_forbidden, url=url) if not isinstance(k, list) else inner_clean(k, to_table=True, table=parent, parent = parent) for k in _d])
+    new_d = [i for a, b in itertools.groupby(d, key=lambda x:isinstance(x, list)) for i in ([list(b)] if not a else b)]
+    return [inner_clean(i) for i in new_d]
+
+
