@@ -84,12 +84,14 @@ class Matcher:
 class _node:
     def __init__(self, _is_leaf:bool, _hash:int, _tag:str) -> None:
         self.is_leaf, self.hash, self.tag = _is_leaf, _hash, _tag
+        
     def __repr__(self) -> str:
         return f'Node({self.hash}, is_leaf={self.is_leaf}, tag={self.tag})'    
 
 class Tree_Row:
     def __init__(self, _paths:typing.List[list], _tags:dict, _leafs:dict) -> None:
         self.paths, self.tags, self.leafs = _paths, _tags, _leafs
+        
     @property
     def segment(self):
         _parents, _leafs = [], []
@@ -98,8 +100,9 @@ class Tree_Row:
                 _leafs.append(i)
             else:
                 _parents.append(i)
-        #print('in segment', _parents, _leafs)
+                
         return _parents, _leafs
+    
     def __len__(self) -> int:
         _parents, _leafs = self.segment
         return len(_parents)+len(list(itertools.groupby(sorted(_leafs, key=lambda x:self.tags[x]), key=lambda x:self.tags[x])))
@@ -132,6 +135,7 @@ class Tree_Row:
         
     def __repr__(self) -> str:
         return f'{self.__class__.__name__}({self.paths})'
+    
     @classmethod
     def obj_tree_row(cls, _paths:typing.List[list], _obj) -> typing.Callable:
         return cls(_paths, _obj.tags, _obj.leafs)
@@ -177,14 +181,17 @@ class _V2:
                 for i in _new_content:
                     yield from _label(i, _path+[_c])
         return list(_label(_tree))
+    
     @classmethod
     def eval_row(cls, _row:typing.List[int], p_obj) -> int:
         pass
+    
     @classmethod
     def _h_compare(cls, t_shift:int, b_shift:int, l1:typing.List[typing.List[int]], l2:typing.List[typing.List[int]]) -> int:
         top_r, bottom_r = sum(len(i) for i in l2[:t_shift]), 0 if not b_shift else sum(len(i) for i in l2[-b_shift:])
         new_l = l2[t_shift:] if not b_shift else l2[t_shift:-b_shift]
         return top_r + bottom_r + sum(abs(len(a) - len(b)) for a, b in zip(new_l, l1))
+    
     @classmethod
     def h_compare(cls, t_shift:int, b_shift:int, l1:Tree_Row, l2:Tree_Row) -> None:
         top_r, bottom_r = sum(len(i) for i in l2[:t_shift]), 0 if not b_shift else sum(len(i) for i in l2[-b_shift:])
@@ -192,6 +199,7 @@ class _V2:
         _k = sum(a - b for a, b in zip(new_l, l1))
         _vals = top_r + bottom_r + _k
         return _vals
+    
     @classmethod
     def _v2_compare(cls, _l1:typing.List[typing.List[int]], _l2:typing.List[typing.List[int]]) -> int:
         l1, l2 = list(itertools.zip_longest(*sorted(_l1, key=len, reverse=True))), list(itertools.zip_longest(*sorted(_l2, key=len, reverse=True)))
