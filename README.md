@@ -1,6 +1,6 @@
 # Scrapio
 
-This repo contains the source of several different web data extraction algorithms, originally designed to be used in conjuction with each other, but will also work as standalone miners. 
+This repo contains the source of several different web data extraction algorithms, originally designed to be used in conjuction with each other, but will also work as standalone page record miners. 
 
 ## Key Source File Directory
 
