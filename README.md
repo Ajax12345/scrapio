@@ -1,6 +1,6 @@
 # Scrapio
 
-Scrapio is a suite of automatic web content extractors, designed to detect, pull, and export structured and semi-structured web page content (for example, news articles and tables) into convenient formats, such as JSON and CSV.
+Scrapio is a suite of automatic web content extractors that are designed to detect, pull, and export structured and semi-structured web page content (i.e news articles and tables) into convenient formats, such as JSON and CSV.
 
 This repo contains the source of several different web data extraction algorithms, originally designed to be used in conjuction with each other, but will also work as standalone page record miners. 
 
