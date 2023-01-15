@@ -1,6 +1,6 @@
 # Scrapio
 
-Scrapio is a suit of automatic web content extractors, largely designed to pull structured and semi-structured web page content (for example, news articles and tables).
+Scrapio is a suite of automatic web content extractors, largely designed to pull structured and semi-structured web page content (for example, news articles and tables).
 
 This repo contains the source of several different web data extraction algorithms, originally designed to be used in conjuction with each other, but will also work as standalone page record miners. 
 
